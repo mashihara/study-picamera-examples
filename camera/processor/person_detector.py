@@ -17,7 +17,7 @@ class PersonDetector(object):
         self.vs = PiVideoStream(resolution=(800, 608)).start()
         self.flip = flip
         time.sleep(2.0)
-        
+
     def __del__(self):
         self.vs.stop()
 
@@ -39,7 +39,11 @@ class PersonDetector(object):
         net.setInput(blob)
         detections = net.forward()
 
+        count = 0
+
         for i in np.arange(0, detections.shape[2]):
+            # 4次元配列の取り出し方
+            # 4次元配列のconfidence
             confidence = detections[0, 0, i, 2]
 
             if confidence < 0.2:
@@ -49,6 +53,8 @@ class PersonDetector(object):
             if idx != 15:
                 continue
 
+            count = count + 1
+
             box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
             (startX, startY, endX, endY) = box.astype('int')
             label = '{}: {:.2f}%'.format('Person', confidence * 100)
@@ -56,4 +62,5 @@ class PersonDetector(object):
             y = startY - 15 if startY - 15 > 15 else startY + 15
             cv2.putText(frame, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
+        cv2.putText(frame,count,(startX, y),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
         return frame
